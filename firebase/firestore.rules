@@ -1,0 +1,126 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return request.auth.token.role;
+    }
+
+    function myTenant() {
+      return request.auth.token.tenantId;
+    }
+
+    function isSuperAdmin() {
+      return signedIn() && role() == 'superadmin';
+    }
+
+    function isTenantMember(tenantId) {
+      return signedIn() && myTenant() == tenantId;
+    }
+
+    function isOwner(tenantId) {
+      return isTenantMember(tenantId) && role() == 'owner';
+    }
+
+    function isOwnerOrTeacher(tenantId) {
+      return isTenantMember(tenantId) && (role() == 'owner' || role() == 'teacher');
+    }
+
+    function isStudent(tenantId) {
+      return isTenantMember(tenantId) && role() == 'student';
+    }
+
+    function isParent(tenantId) {
+      return isTenantMember(tenantId) && role() == 'parent';
+    }
+
+    function linkedStudent(studentId) {
+      return request.auth.token.linkedStudentIds != null
+        && studentId in request.auth.token.linkedStudentIds;
+    }
+
+    match /tenants/{tenantId} {
+      allow read: if isSuperAdmin() || isTenantMember(tenantId);
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin() || isOwner(tenantId);
+      allow delete: if isSuperAdmin();
+
+      match /users/{uid} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow write: if isSuperAdmin() || isOwner(tenantId);
+      }
+
+      match /students/{studentId} {
+        allow read: if isSuperAdmin() || isOwnerOrTeacher(tenantId) || (isStudent(tenantId) && studentId == request.auth.uid) || (isParent(tenantId) && linkedStudent(studentId));
+        allow create, update: if isSuperAdmin() || isOwner(tenantId);
+        allow delete: if isSuperAdmin() || isOwner(tenantId);
+      }
+
+      match /teachers/{teacherId} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow write: if isSuperAdmin() || isOwner(tenantId);
+      }
+
+      match /batches/{batchId} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow write: if isSuperAdmin() || isOwner(tenantId);
+      }
+
+      match /attendance/{recordId} {
+        allow read: if isSuperAdmin() || isOwnerOrTeacher(tenantId) || isStudent(tenantId) || (isParent(tenantId) && resource.data.studentIds.hasAny(request.auth.token.linkedStudentIds));
+        allow write: if isSuperAdmin() || isOwnerOrTeacher(tenantId);
+      }
+
+      match /fees/{feeId} {
+        allow read: if isSuperAdmin() || isOwner(tenantId) || (isStudent(tenantId) && resource.data.studentId == request.auth.uid) || (isParent(tenantId) && linkedStudent(resource.data.studentId));
+        allow write: if isSuperAdmin() || isOwner(tenantId);
+      }
+
+      match /notices/{noticeId} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow create: if isSuperAdmin() || isOwnerOrTeacher(tenantId);
+        allow update, delete: if isSuperAdmin() || isOwner(tenantId);
+      }
+
+      match /homework/{hwId} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow write: if isSuperAdmin() || isOwnerOrTeacher(tenantId);
+      }
+
+      match /guardians/{uid} {
+        allow read: if isSuperAdmin() || isOwner(tenantId) || (isParent(tenantId) && uid == request.auth.uid);
+        allow write: if isSuperAdmin() || isOwner(tenantId);
+      }
+      match /admissions/{admissionId} {
+        allow read: if isSuperAdmin() || isOwner(tenantId);
+        allow write: if isSuperAdmin() || isOwner(tenantId);
+      }
+      match /exams/{examId} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow write: if isSuperAdmin() || isOwnerOrTeacher(tenantId);
+        match /questions/{questionId} {
+          allow read: if isSuperAdmin() || isTenantMember(tenantId);
+          allow write: if isSuperAdmin() || isOwnerOrTeacher(tenantId);
+        }
+      }
+      match /examResults/{resultId} {
+        allow read: if isSuperAdmin() || isOwnerOrTeacher(tenantId) || (isStudent(tenantId) && resource.data.studentId == request.auth.uid) || (isParent(tenantId) && linkedStudent(resource.data.studentId));
+        allow write: if isSuperAdmin() || isOwnerOrTeacher(tenantId);
+      }
+      match /payments/{paymentId} {
+        allow read: if isSuperAdmin() || isOwner(tenantId) || (isStudent(tenantId) && resource.data.studentId == request.auth.uid) || (isParent(tenantId) && linkedStudent(resource.data.studentId));
+        allow create: if isSuperAdmin() || isOwner(tenantId) || isTenantMember(tenantId);
+        allow update, delete: if isSuperAdmin() || isOwner(tenantId);
+      }
+      match /auditLogs/{logId} {
+        allow read: if isSuperAdmin() || isOwner(tenantId);
+        allow create: if isSuperAdmin() || isOwner(tenantId);
+      }
+    }
+  }
+}

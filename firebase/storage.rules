@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return signedIn() && request.auth.token.role == 'superadmin';
+    }
+
+    function isTenantMember(tenantId) {
+      return signedIn() && request.auth.token.tenantId == tenantId;
+    }
+
+    function isOwner(tenantId) {
+      return isTenantMember(tenantId) && request.auth.token.role == 'owner';
+    }
+
+    match /tenants/{tenantId}/logo/{fileName} {
+      allow read: if true;
+      allow write: if isSuperAdmin() || isOwner(tenantId);
+    }
+
+    match /tenants/{tenantId}/notices/{fileName} {
+      allow read: if isSuperAdmin() || isTenantMember(tenantId);
+      allow write: if isSuperAdmin() || isOwner(tenantId);
+    }
+
+    match /tenants/{tenantId}/students/{studentId}/{fileName} {
+      allow read: if isSuperAdmin() || isTenantMember(tenantId);
+      allow write: if isSuperAdmin() || isOwner(tenantId);
+    }
+  }
+}

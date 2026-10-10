@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+/* ============================================================
+   ROSTER — design tokens
+   Signature: a school roll-register / punch-card ledger.
+   Ruled lines, punch holes, tally-mark checks, stamped roll
+   numbers in mono type. Paper, not screen-glow.
+   ============================================================ */
+
+:root {
+  --paper: #faf9f4;
+  --paper-raised: #ffffff;
+  --ink: #12201b;
+  --ink-soft: #4b5a52;
+  --ink-faint: #8a978f;
+  --rule: #d8dcd2;
+  --rule-strong: #12201b;
+
+  --board: #1f6f50;
+  --board-deep: #14503a;
+  --board-tint: #e6f2ec;
+
+  --chalk: #f2c14e;
+  --chalk-tint: #fdf3da;
+
+  --red-pen: #cf4433;
+  --red-pen-tint: #fbe8e5;
+
+  --sky: #2f6fed;
+
+  --radius-card: 14px;
+  --radius-chip: 999px;
+  --shadow-stamp: 3px 3px 0 0 var(--rule-strong);
+  --shadow-stamp-sm: 2px 2px 0 0 var(--rule-strong);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-board: var(--board);
+  --color-board-deep: var(--board-deep);
+  --color-board-tint: var(--board-tint);
+  --color-chalk: var(--chalk);
+  --color-chalk-tint: var(--chalk-tint);
+  --color-red-pen: var(--red-pen);
+  --color-red-pen-tint: var(--red-pen-tint);
+  --color-sky: var(--sky);
+
+  --font-display: var(--font-space-grotesk);
+  --font-body: var(--font-public-sans);
+  --font-mono: var(--font-plex-mono);
+}
+
+html { background: var(--paper); }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.font-tabular {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-feature-settings: "tnum" 1;
+}
+
+.bg-ruled {
+  background-image: repeating-linear-gradient(
+    to bottom, transparent, transparent 27px, var(--rule) 27px, var(--rule) 28px
+  );
+}
+
+.punch-holes {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  gap: 6px;
+}
+.punch-holes span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1.5px solid var(--rule-strong);
+}
+
+.stamp-card {
+  background: var(--paper-raised);
+  border: 1.5px solid var(--rule-strong);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-stamp);
+}
+
+.stamp-btn {
+  border: 1.5px solid var(--rule-strong);
+  box-shadow: var(--shadow-stamp-sm);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.stamp-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--rule-strong);
+}
+
+.tally {
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: var(--board);
+  transform: rotate(12deg);
+}
+
+::selection { background: var(--chalk); color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
